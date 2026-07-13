@@ -1,0 +1,20 @@
+[project]
+name = "advanced-schedule"
+version = "1.0.0"
+description = "A natural language timer and alarm daemon for AI agents."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [
+    { name = "Axton Carroll" }
+]
+dependencies = [
+    "dateparser>=1.2.0",
+]
+
+[project.scripts]
+advanced-timer = "advanced_timer:main"
+
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"

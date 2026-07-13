@@ -1,0 +1,48 @@
+Metadata-Version: 2.4
+Name: advanced-schedule
+Version: 1.0.0
+Summary: A natural language timer and alarm daemon for AI agents.
+Author: Axton Carroll
+License: MIT
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: dateparser>=1.2.0
+Dynamic: license-file
+
+# Advanced Schedule (Agentic Background Timer)
+
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Python](https://img.shields.io/badge/python-3.8%2B-blue)
+
+A lightweight natural language timer daemon built explicitly for Autonomous AI Agents and LLM workflows. 
+
+## The Problem
+Native agent scheduling tools (like the standard `schedule` tool) typically have a hardcoded 15-minute execution limit to prevent blocking the context window and consuming execution resources. However, when building complex autonomous systems, you often need an agent to wait for hours (or days) for a slow build to complete, a web server to spin up, or to send a recurring summary at an exact calendar time.
+
+## The Solution
+`advanced-schedule` provides a background Python daemon that parses natural language time strings, sleeps completely silently in the background, and wakes the agent up via a standard output injection once the time elapses. 
+
+## Installation
+
+You can install the package directly or use `uv`:
+
+```bash
+pip install dateparser
+# Or, if using uv
+uv run --with dateparser advanced_timer.py --time "in 1 hour" --message "Wake up"
+```
+
+## Usage (CLI)
+
+The script takes two arguments:
+1. `--time`: The natural language time string (e.g. `"in 6 hours"`, `"tomorrow at 9:00 AM"`, `"in 2 weeks"`).
+2. `--message`: The literal message that will be printed to standard output when the timer completes.
+
+```bash
+python advanced_timer.py --time "9:30 AM" --message "Check the morning metrics"
+```
+
+## Agent Integration (OpenClaw / Swarm Core)
+
+If you are using OpenClaw or a similar agent framework, simply copy the `SKILL.md` file into your agent's `skills/` directory. Your agent will automatically learn how to invoke this script in the background to handle long-running timeouts.
