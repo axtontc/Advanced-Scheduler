@@ -46,8 +46,8 @@ sequenceDiagram
     Note over Daemon: Sleeps for 6 hours
     Agent->>Agent: Continues working on other tasks...
     Note over Daemon: 6 hours elapse
-    Daemon->>Agent: [ADVANCED-SCHEDULE ALARM]: Wake up!
-    Note over Agent: Agent is reactively woken<br/>and processes the injected memory.
+    Daemon->>Agent: ADVANCED-SCHEDULE ALARM: Wake up!
+    Note over Agent: Agent is reactively woken and processes the injected memory.
 ```
 
 ---
