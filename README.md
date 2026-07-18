@@ -132,6 +132,61 @@ To make this skill permanently available to your swarm:
 
 ---
 
+## 🏗️ Core Subsystems
+
+| Subsystem | Folder / File | Responsibility |
+|---|---|---|
+| **Daemon Entrypoint** | `advanced_timer.py` | CLI parsing, natural language extraction, delta sleep, and stdout notification injection |
+| **Workflow CI** | `.github/workflows/ci.yml` | Automatic ruff style checking and multi-python version test executing |
+| **Validation Tests** | `tests/test_advanced_timer.py` | Pytest suite validating mock datetime returns and argparse parameters |
+
+---
+
+## 📖 API & Core Functions Reference
+
+### `advanced_timer.py`
+These functions drive the natural language daemon loop:
+
+| Function / Routine | Parameters | Description |
+|---|---|---|
+| `parse_time(time_str)` | `str` | Parses natural language time strings using `dateparser` biased toward future timestamps. Returns `datetime` or `None`. |
+| `main()` | None | Resolves CLI options, verifies target times, sleeps for the delta duration, and outputs the alarm payload. |
+
+---
+
+## 📊 Comparison Matrix
+
+| Scheduler Mode | standard `time.sleep` | Host OS `cron` | **Advanced Scheduler** |
+|---|:---:|:---:|:---:|
+| **Natural Language Inputs** | ❌ | ❌ | **✅ Yes (`dateparser`)** |
+| **Detached Background Execution** | ❌ (Blocks thread) | ⚠️ OS Dependent | **✅ Yes (Detached process)** |
+| **Injected Stdout Memory** | ❌ | ❌ | **✅ Yes (Context injection)** |
+| **0% CPU Idle Footprint** | ✅ | ✅ | **✅ Yes** |
+| **Offline Vector Memory Safe** | ❌ | ❌ | **✅ Yes (No context locks)** |
+
+---
+
+## 🧰 Tech Stack
+
+* **Core Language**: Python 3.11+
+* **Dependencies**: `dateparser`
+* **Style Enforcement**: Ruff
+* **Quality Verification**: mypy, pytest
+
+---
+
+## 🗺️ Roadmap
+
+- [x] Natural language relative time parsing
+- [x] Detached OS background daemon execution
+- [x] Context-based stdout memory alarms injection
+- [x] Multi-python version CI testing
+- [ ] **Webhook Alerts** — Post HTTP notifications to external endpoints (Slack/Discord) when alarm finishes
+- [ ] **State Persistence** — Store pending alarms in a lightweight local DB to survive system reboots
+- [ ] **Interactive Management CLI** — List, pause, adjust, or cancel active running timer processes
+
+---
+
 ## 🔗 Ecosystem Cross-Linking
 
 Advanced Scheduler is part of the Antigravity agentic tool suite:
