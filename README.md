@@ -1,114 +1,168 @@
 <div align="center">
-  
-# 🕒 Advanced Schedule (Agentic Background Timer)
+  <img src="scheduler_social_preview.png" alt="Advanced Scheduler Banner" width="100%" />
+</div>
 
-[![Python Version](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://python.org)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![OpenClaw Compatible](https://img.shields.io/badge/Agent-OpenClaw_Compatible-success.svg)](#agent-integration)
+<br>
 
-A lightweight, natural language timer daemon built explicitly for Autonomous AI Agents and long-running LLM workflows.
+<div align="center">
 
-[Installation](#installation) •
-[Usage](#usage) •
-[Architecture](#architecture) •
-[Agent Integration](#agent-integration)
+[![Status](https://img.shields.io/badge/Status-Stable%20v1.0-2ea043?style=for-the-badge)](https://github.com/axtontc/Advanced-Scheduler/releases)
+[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue?style=for-the-badge)](LICENSE)
+[![CI](https://img.shields.io/github/actions/workflow/status/axtontc/Advanced-Scheduler/ci.yml?branch=main&style=for-the-badge&label=CI)](https://github.com/axtontc/Advanced-Scheduler/actions)
 
 </div>
+
+<br>
+
+<h1 align="center">🕒 Advanced Scheduler — Natural Language Agent Alarm Daemon</h1>
+
+<p align="center">
+  <strong>A high-performance, natural language background sleep daemon designed for autonomous AI agents and long-running workflows. Bypasses standard agent execution limits with isolated background alarms.</strong>
+</p>
+
+<p align="center">
+  <a href="#-quick-start">Quick Start</a> •
+  <a href="#-the-problem">The Problem</a> •
+  <a href="#-the-solution">The Solution</a> •
+  <a href="#-architecture">Architecture</a> •
+  <a href="#-agent-integration">Agent Integration</a> •
+  <a href="#-ecosystem-cross-linking">Ecosystem</a>
+</p>
 
 ---
 
 ## 🛑 The Problem
 
-Native agent scheduling tools (like the standard `schedule` or `sleep` API) typically enforce a hardcoded **15-minute execution limit**. This is an intentional guardrail to prevent an agent from blocking its context window and burning through compute resources while "waiting".
+Native agent platforms (like Claude Desktop, Cursor, or custom SDKs) enforce short timeout boundaries. The standard sleep tools or timers block the main execution thread, which locks the context window and burns massive amounts of tokens while the agent is sitting idle "waiting".
 
-However, when building complex, autonomous, world-simulating systems, you often need an agent to wait for hours (or days) for a massive build to complete, a web server to spin up, or to send a recurring summary at an exact calendar time.
-
-## 💡 The Solution
-
-`advanced-schedule` provides a robust background Python daemon that:
-1. Parses ambiguous, natural language time strings (e.g., *"in 6 hours"*, *"tomorrow at 9:00 AM"*).
-2. Detaches and sleeps **completely silently** in the background, consuming ~0% CPU.
-3. Wakes the agent up by injecting a structured stdout alarm back into the agent's context window.
+Because of this, agents are typically restricted from schedules exceeding a few minutes, preventing them from waiting for hours for compilation builds, server initialization, or scheduled calendar tasks to trigger.
 
 ---
 
-## ⚙️ Architecture
+## 💡 The Solution
+
+`advanced-schedule` runs an isolated, detached Python background process that:
+1. **Parses Natural Language**: Parses complex time strings (e.g., *"in 6 hours"*, *"tomorrow at 9:00 AM"*, *"9:30 AM"*) using `dateparser` with future bias settings.
+2. **Consumes 0% CPU**: Sleeps silently in the background of the host OS without taking up active thread locks.
+3. **Injects Memory Alarms**: Wakes the agent up by outputting a structured memory payload into standard output when the timer expires.
+
+---
+
+## ⚡ Quick Start
+
+### Prerequisites
+- **Python 3.11+**
+- **uv** (recommended for rapid dependency syncing)
+
+### 1. Clone & Setup
+```bash
+git clone https://github.com/axtontc/Advanced-Scheduler.git
+cd Advanced-Scheduler
+
+# Sync virtual environment using uv
+uv sync
+
+# Or using pip
+python -m venv .venv
+.venv/Scripts/activate  # On Windows
+source .venv/bin/activate  # On Linux/macOS
+pip install .
+```
+
+### 2. Verify with the Test Suite
+Ensure the time parsing and CLI validation runs pass:
+```bash
+uv run python -m pytest tests/ -v
+```
+
+---
+
+## 💻 CLI Usage
+
+The CLI requires two arguments:
+* `--time`: Natural language time format string (e.g., `"in 2 hours"`, `"9:30 AM"`, `"tomorrow at noon"`).
+* `--message`: The exact payload message output to standard output when the timer wakes.
+
+### Examples
+
+**Relative Duration:**
+```bash
+advanced-timer --time "in 6 hours" --message "Verify compilation of codebase"
+```
+
+**Specific Calendar Time:**
+```bash
+advanced-timer --time "9:30 AM" --message "Run daily sync checklist"
+```
+
+**Complex Relative Dates:**
+```bash
+advanced-timer --time "tomorrow at noon" --message "Ping staging endpoints"
+```
+
+---
+
+## 🏗 Architecture
 
 ```mermaid
 sequenceDiagram
     participant Agent as Autonomous Agent
     participant OS as Host OS
-    participant Daemon as Advanced Schedule
+    participant Daemon as Advanced Scheduler
 
-    Agent->>OS: run_command(advanced_timer.py --time "in 6h")
-    OS->>Daemon: Spawn detached process
+    Agent->>OS: Spawn detached process (advanced-timer --time "in 6h")
+    OS->>Daemon: Initialize alarm daemon
     Daemon-->>Agent: (Silent) No initial stdout blocking
-    Note over Daemon: Sleeps for 6 hours
-    Agent->>Agent: Continues working on other tasks...
+    Note over Daemon: Sleeps for 6 hours (0% CPU)
+    Agent->>Agent: Agent continues executing other tasks
     Note over Daemon: 6 hours elapse
-    Daemon->>Agent: ADVANCED-SCHEDULE ALARM: Wake up!
-    Note over Agent: Agent is reactively woken and processes the injected memory.
-```
-
----
-
-## 🚀 Installation
-
-You can run `advanced-schedule` as a standalone CLI tool or natively within an agent framework.
-
-### Prerequisites
-- Python 3.8+
-- The `dateparser` library.
-
-```bash
-# Standard Pip
-pip install dateparser
-
-# Or use astral-sh/uv for ephemeral environments (Recommended)
-uv run --with dateparser advanced_timer.py --time "in 1 hour" --message "Wake up"
-```
-
----
-
-## 💻 Usage (CLI)
-
-The script requires exactly two arguments:
-1. `--time`: The natural language time string.
-2. `--message`: The exact payload you want injected back into standard output when the timer completes.
-
-### Examples
-
-**Specific Duration:**
-```bash
-python advanced_timer.py --time "in 6 hours" --message "Check the morning metrics"
-```
-
-**Specific Calendar Time:**
-```bash
-python advanced_timer.py --time "9:30 AM" --message "Generate the daily briefing."
-```
-
-**Relative Future Dates:**
-```bash
-python advanced_timer.py --time "tomorrow at noon" --message "Ping the staging server."
+    Daemon->>Agent: [ADVANCED-SCHEDULE ALARM]: Verify compilation of codebase
+    Note over Agent: Agent reactively processes stdout memory
 ```
 
 ---
 
 ## 🤖 Agent Integration
 
-This tool was built to be seamlessly integrated into **OpenClaw**, **Fractal Swarm**, and other autonomous agent ecosystems.
-
-1. Drop the `SKILL.md` and `advanced_timer.py` files into your agent's `skills/` or `.agents/` configuration directory.
-2. The agent will autonomously read the `SKILL.md` and learn the syntax.
-3. When the agent realizes it needs to wait for a duration exceeding its native limits, it will automatically spawn the daemon via its `run_command` tool and continue working.
+To make this skill permanently available to your swarm:
+1. Copy `SKILL.md` and `advanced_timer.py` into your agent's local skills directory (e.g., `.agents/skills/advanced-schedule/`).
+2. When the agent reads `SKILL.md`, it learns the syntax rules.
+3. If a task requires waiting longer than the standard run window, the agent will invoke the background daemon and pause execution safely.
 
 ---
 
-## 🤝 Contributing
+## 🔗 Ecosystem Cross-Linking
 
-Contributions are welcome! If you're building agentic swarms and find an edge-case in date parsing, feel free to open a PR.
+Advanced Scheduler is part of the Antigravity agentic tool suite:
 
-## 📄 License
+| Project | Description |
+|---|---|
+| [AUI](https://github.com/axtontc/AUI) | Zero-latency cross-process UI automation for Windows and Web |
+| [MemMCP](https://github.com/axtontc/MemMCP) | Deterministic memory server with SQLite WAL and FAISS RRF |
+| [The-Skillbrary](https://github.com/axtontc/The-Skillbrary) | Low-latency registry and FastMCP execution server for agent swarms |
+| [Multiverse-Planner](https://github.com/axtontc/Multiverse-Planner) | Brute-forces optimal plans via timeline expansion and pruning |
+| [Fractal-Swarm-v2](https://github.com/axtontc/Fractal-Swarm-v2) | Mathematically optimal state-machine agent swarm orchestration |
+| [AntiMem](https://github.com/axtontc/AntiMem) | Memory daemon and compactor for Antigravity swarms |
+| [OmniMem](https://github.com/axtontc/OmniMem) | PostgreSQL hybrid memory system for large enterprise swarms |
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+---
+
+## 📜 License
+
+This project is licensed under the Apache License, Version 2.0. See the [LICENSE](LICENSE) file for details. Copyright (c) 2026 Axton Carroll.
+
+---
+
+<div align="center">
+  <br>
+  <strong>⭐ If the Advanced Scheduler helps manage your agent execution loops, consider giving it a star!</strong>
+  <br>
+  <br>
+  <a href="https://github.com/axtontc/Advanced-Scheduler">
+    <img src="https://img.shields.io/github/stars/axtontc/Advanced-Scheduler?style=social" alt="GitHub Stars" />
+  </a>
+  <br>
+  <br>
+  <sub>Built by <a href="https://github.com/axtontc">Axton Carroll</a> — "Nothing is impossible, we merely don't know how to do it yet."</sub>
+</div>
